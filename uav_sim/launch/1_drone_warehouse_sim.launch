@@ -1,0 +1,34 @@
+<launch>
+  <!-- Warehouse Model Path fixing -->
+  <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find uav_sim)/models/warehouse"/>
+  <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find uav_sim)/models/warehouse"/>
+<!--  Drone position arguments for spawning node and rviz configuration file  -->
+  <arg name="x_pos" default="-1.182740"/>
+  <arg name="y_pos" default="-16.179793"/>
+  <arg name="z_pos" default="0.4"/>
+  <arg name="config_file" default="$(find uav_sim)/config/sensors_check.rviz"/>
+<!-- Loading Warehouse World into Gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find uav_sim)/worlds/warehouse.world"/>
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="true"/>
+  </include>
+
+<!-- Spawning Drone with Custom Sensors -->
+
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+     <arg name="name" default="drone"/>
+     <arg name="model" value="$(find uav_sim)/urdf/hector_camera_laser.urdf.xacro"/>
+     <arg name= "x" value="$(arg x_pos)"/>
+     <arg name= "y" value="$(arg y_pos)"/>
+     <arg name= "z" value="$(arg z_pos)"/>
+   </include>
+
+<!-- Launching Rviz for Sensor's Data Visualization -->
+  <!-- <node pkg="rviz" type="rviz" name="visualizer" args="-d $(config_file)"/> -->
+
+</launch>

@@ -1,0 +1,18 @@
+<launch>
+    <arg name="point_cloud_topic"  default="/asus_depth_camera/depth/points" />
+    <arg name="base_frame"  default="base_footprint"/>
+    <arg name="odom_frame"  default="world"/>
+
+    <include file="$(find uav_sim)/launch/1_drone_warehouse_sim.launch"/>
+
+    <node pkg="rviz" type="rviz" name="visualizer" args="-d $(find uav_sim)/config/octoMap_mapping.rviz"/>
+
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.05" />
+		<param name="frame_id" type="string" value="$(arg odom_frame)" />
+		<param name="sensor_model/max_range" value="5.0" />
+		<remap from="cloud_in" to="$(arg point_cloud_topic)" />
+
+	</node>
+</launch>

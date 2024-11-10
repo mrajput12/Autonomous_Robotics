@@ -1,0 +1,71 @@
+<launch>
+<!-- This file is used to produce map using rtabmap-Viz
+  - It opens up simulation , rtabviz ,drone flying ,  teleop_twist_keyboard for driving
+
+
+  TO speed up mapping  mapping -> increate update rate
+ -->
+
+  <arg name="open_rviz" default="true"/>
+  <arg name="rtabmapviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <arg name="with_camera" default="true"/>
+  <arg name="localization" default="false"/>
+  <arg name="database_path" default="~/.ros/rtabmap.db"/>
+  <arg     if="$(arg localization)" name="rtabmap_args" default=""/>
+  <arg unless="$(arg localization)" name="rtabmap_args" default="-d"/>
+
+<!-- Launch our robot in enviornment -->
+  <include file="$(find uav_sim)/launch/1_drone_warehouse_sim.launch">
+    <arg name="rviz" default="false"/>
+  </include>
+
+  <group ns="rtabmap">
+    <node pkg="rtabmap_ros" type="rgbd_sync" name="rgbd_sync" output="screen">
+      <remap from="rgb/image"         to="/asus_depth_camera/rgb/image_raw"/>
+      <remap from="depth/image"       to="/asus_depth_camera/depth/image_raw"/>
+      <remap from="rgb/camera_info"   to="/asus_depth_camera/rgb/camera_info"/>
+    </node>
+
+    <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="database_path"       type="string" value="$(arg database_path)"/>
+      <param name="frame_id"            type="string" value="base_footprint"/>
+      <param name="subscribe_rgb"   type="bool" value="false"/>
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <param name="subscribe_rgbd" type="bool" value="true"/>
+      <param name="subscribe_scan"      type="bool"   value="true"/>
+      <param name="approx_sync"         type="bool"   value="true"/>
+      <remap from="scan"            to="/scan"/>
+      <remap from="odom"            to="/ground_truth/state"/>
+      <remap from="rgbd_image"       to="rgbd_image"/>
+      <remap from="grid_map" to="/map"/>
+
+      <param name="Reg/Strategy"                 type="string" value="1"/>
+      <param name="Reg/Force3DoF"                type="string" value="true"/>
+      <param name="GridGlobal/MinSize"           type="string" value="20"/>
+
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+    </node>
+
+    <node if="$(arg rtabmapviz)" pkg="rtabmap_ros" type="rtabmapviz" name="rtabmapviz" args="-d $(find rtabmap_ros)/launch/config/rgbd_gui.ini" output="screen">
+      <param name="subscribe_scan"   type="bool"   value="true"/>
+      <param name="subscribe_odom"   type="bool"   value="true"/>
+      <param name="frame_id"         type="string" value="base_footprint"/>
+      <param name="approx_sync"      type="bool"   value="true"/>
+
+      <remap from="odom"            to="/ground_truth/state"/>
+      <remap from="scan"            to="/scan"/>
+    </node>
+  </group>
+
+<!-- First Flying the drone  -->
+  <node pkg="uav_sim" type="hover_drone.py" name="hover_drone" output="screen"/>
+
+<!-- For driving the robot -->
+<node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="bot_driver">
+
+</node>
+
+</launch>

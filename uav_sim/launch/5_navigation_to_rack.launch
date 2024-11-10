@@ -1,0 +1,97 @@
+<launch>
+
+  <arg name="scan_topic"  default="/scan" />
+  <arg name="base_frame"  default="base_footprint"/>
+  <arg name="odom_frame"  default="world"/>
+  <arg name="point_cloud_topic"  default="/asus_depth_camera/depth/points" />
+
+
+
+  <!--  Running drone in warehouse Simulation  -->
+  <include file="$(find uav_sim)/launch/1_drone_warehouse_sim.launch"/>
+  <!--  Rviz for visualization -->
+  <node pkg="rviz" type="rviz" name="visualizer" args="-d $(find uav_sim)/config/octoMap_mapping.rviz"/>
+  <!--  Gmapping node For Mapping the enviorment -->
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" >
+    <param name="base_frame" value="$(arg base_frame)"/>
+    <param name="odom_frame" value="$(arg odom_frame)"/>
+    <param name="map_update_interval" value="5.0"/>
+    <param name="maxUrange" value="6.0"/>
+    <param name="maxRange" value="8.0"/>
+    <param name="sigma" value="0.05"/>
+    <param name="kernelSize" value="1"/>
+    <param name="lstep" value="0.05"/>
+    <param name="astep" value="0.05"/>
+    <param name="iterations" value="5"/>
+    <param name="lsigma" value="0.075"/>
+    <param name="ogain" value="3.0"/>
+    <param name="lskip" value="0"/>
+    <param name="minimumScore" value="200"/>
+    <param name="srr" value="0.01"/>
+    <param name="srt" value="0.02"/>
+    <param name="str" value="0.01"/>
+    <param name="stt" value="0.02"/>
+    <param name="linearUpdate" value="0.5"/>
+    <param name="angularUpdate" value="0.436"/>
+    <param name="temporalUpdate" value="-1.0"/>
+    <param name="resampleThreshold" value="0.5"/>
+    <param name="particles" value="80"/>
+    <param name="xmin" value="-1.0"/>
+    <param name="ymin" value="-1.0"/>
+    <param name="xmax" value="1.0"/>
+    <param name="ymax" value="1.0"/>
+
+    <param name="delta" value="0.05"/>
+    <param name="llsamplerange" value="0.01"/>
+    <param name="llsamplestep" value="0.01"/>
+    <param name="lasamplerange" value="0.005"/>
+    <param name="lasamplestep" value="0.005"/>
+    <remap from="scan" to="$(arg scan_topic)"/>
+  </node>
+  <!-- OctoMap -->
+ <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.05" />
+		<param name="frame_id" type="string" value="$(arg odom_frame)" />
+		<param name="sensor_model/max_range" value="5.0" />
+		<remap from="cloud_in" to="$(arg point_cloud_topic)" />
+
+	</node>
+
+
+ <arg name="odom_topic" default="/ground_truth/state" />
+  <arg name="laser_topic" default="/scan" />
+    <arg name="global_frame_id" default="map"/>
+      <arg name="base_frame_id"   default="base_footprint"/>
+
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+    <rosparam file="$(find uav_sim)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find  uav_sim)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find uav_sim)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find  uav_sim)/param/global_costmap_params.yaml" command="load" />
+     <rosparam file="$(find  uav_sim)/param/base_local_planner_params.yaml" command="load" />
+     <rosparam file="$(find  uav_sim)/param/global_planner_params.yaml" command="load" />
+    <rosparam file="$(find  uav_sim)/param/dwa_local_planner_params.yaml" command="load" />
+   <rosparam file="$(find  uav_sim)/param/move_base_params.yaml" command="load" />-->
+
+   <rosparam file="$(find  uav_sim)/param/navfn_global_planner_params.yaml" command="load" />
+
+
+    <!-- reset frame_id parameters using user input data -->
+   <param name="global_costmap/global_frame" value="$(arg global_frame_id)"/>
+    <param name="global_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
+   <param name="local_costmap/global_frame" value="$(arg odom_frame)"/>
+   <param name="local_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
+   <param name="DWAPlannerROS/global_frame_id" value="$(arg odom_frame)"/>
+
+    <remap from="cmd_vel" to="/cmd_vel"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <remap from="scan" to="$(arg laser_topic)"/>
+  </node>
+
+
+</launch>
+
+
+
