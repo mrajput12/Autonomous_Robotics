@@ -1,8 +1,8 @@
 import os
 import numpy
 from PIL import Image, ImageDraw
-label_path = "/media/souz/disk/OneDrive - uni-osnabrueck.de/UTP/Done-Inventorymgt/dev/AI_pipeline/yolov7-segmentation/runs/predict-seg/exp/labels"
-image_path = "/media/souz/disk/OneDrive - uni-osnabrueck.de/UTP/Done-Inventorymgt/dev/AI_pipeline/yolov7-segmentation/runs/predict-seg/exp"
+label_path = "link"
+image_path = "link"
 list_dir = os.listdir(label_path)
 
 print(list_dir)
